@@ -91,7 +91,7 @@ class _ContactsPageState extends State<ContactsPage> {
           final newContact = Contact()
             ..originalId = contact.id
             ..name = contact.displayName
-            ..order = ++lastOrder;
+            ..order = lastOrder++;
 
           contactsToAdd.add(newContact);
         }

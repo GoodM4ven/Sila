@@ -12,7 +12,8 @@ A contacts connection checklist app.
 - Groups for priority
 - Rates with sliders
 - Shuffling timer
-- Push notification
+- Reminder notification
+- Update notification
 
 ## Stack
 
