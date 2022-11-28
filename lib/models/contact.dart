@@ -10,5 +10,8 @@ class Contact {
 
   late String name;
 
+  @Index()
+  late int order;
+
   bool isConnected = false;
 }

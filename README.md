@@ -1,16 +1,22 @@
-# sila
+# Sila
 
-A new Flutter project.
+A contacts connection checklist app.
 
-## Getting Started
+## Todos
 
-This project is a starting point for a Flutter application.
+- Side menu
+    - Settings page
+    - About page
+- Localization (AR - RTL)
+- Objective notices
+- Groups for priority
+- Rates with sliders
+- Shuffling timer
+- Push notification
 
-A few resources to get you started if this is your first Flutter project:
+## Stack
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Dart](https://dart.dev)
+- [Flutter](https://flutter.dev)
+- [Isar](https://isar.dev)
+- [flutter_contacts](https://pub.dev/packages/flutter_contacts)

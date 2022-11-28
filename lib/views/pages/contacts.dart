@@ -64,10 +64,21 @@ class _ContactsPageState extends State<ContactsPage> {
   }
 
   void _submitContacts() async {
-    List<Contact> contactsToAdd = [];
-    List<Contact> contactsToRemove = [];
     final contactsCollection = widget.database.collection<Contact>();
     final oldContacts = await contactsCollection.where().findAll();
+    List<Contact> contactsToAdd = [];
+    List<Contact> contactsToRemove = [];
+
+    late int lastOrder;
+
+    if (oldContacts.isEmpty) {
+      lastOrder = 0;
+    } else {
+      final lastOrderContact =
+          await contactsCollection.where().sortByOrderDesc().findFirst();
+
+      lastOrder = lastOrderContact!.order;
+    }
 
     for (var contact in _importedContacts) {
       if (_checkedContactIds.contains(contact.id)) {
@@ -79,7 +90,8 @@ class _ContactsPageState extends State<ContactsPage> {
         if (foundContact == null) {
           final newContact = Contact()
             ..originalId = contact.id
-            ..name = contact.displayName;
+            ..name = contact.displayName
+            ..order = ++lastOrder;
 
           contactsToAdd.add(newContact);
         }

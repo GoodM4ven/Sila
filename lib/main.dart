@@ -54,18 +54,22 @@ class _HomePageState extends State<HomePage>
     setState(() => _permissionGranted = permission);
   }
 
-  void _initializeContacts() async {
-    _database = await Isar.open([ContactSchema]);
-    final contacts = await _database.collection<Contact>().where().findAll();
-
-    setState(() {
-      _contacts = contacts;
-      _loading = false;
-    });
-  }
-
   void _updatePermissionState() {
     setState(() => _permissionGranted = true);
+  }
+
+  void _initializeContacts() async {
+    _database = await Isar.open([ContactSchema]);
+    _refreshContacts();
+
+    setState(() => _loading = false);
+  }
+
+  void _refreshContacts() async {
+    final updatedContacts =
+        await _database.collection<Contact>().where().findAll();
+
+    setState(() => _contacts = updatedContacts);
   }
 
   void _updateContactsState(List<Contact> contacts,
@@ -80,10 +84,16 @@ class _HomePageState extends State<HomePage>
       }
     });
 
-    final updatedContacts =
-        await _database.collection<Contact>().where().findAll();
+    _refreshContacts();
+  }
 
-    setState(() => _contacts = updatedContacts);
+  void _toggleContactIsConnectedStatus(Contact contact) async {
+    await _database.writeTxn(() async {
+      contact.isConnected = !contact.isConnected;
+      await _database.contacts.put(contact);
+    });
+
+    _refreshContacts();
   }
 
   @override
@@ -111,24 +121,28 @@ class _HomePageState extends State<HomePage>
       appBar: AppBar(
         title: Text(widget.title),
         actions: [
-          if (!_loading && _permissionGranted)
-            IconButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ContactsPage(
-                      database: _database,
-                      updateContactsState: _updateContactsState,
+          if (!_loading && _permissionGranted && _currentTabIndex == 0)
+            Container(
+              margin: const EdgeInsets.only(right: 15),
+              child: IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ContactsPage(
+                        database: _database,
+                        updateContactsState: _updateContactsState,
+                      ),
                     ),
-                  ),
-                );
-              },
-              tooltip: 'Add Contacts',
-              icon: const Icon(
-                Icons.add,
+                  );
+                },
+                tooltip: 'Add Contacts',
+                icon: const Icon(
+                  Icons.add,
+                ),
               ),
             ),
+          // TODO the resetter in connected page
         ],
       ),
       body: _loading
@@ -137,11 +151,14 @@ class _HomePageState extends State<HomePage>
             )
           : _permissionGranted
               ? TabBarView(
+                  physics: const NeverScrollableScrollPhysics(),
                   controller: _tabController,
                   children: Iterable<int>.generate(_tabsCount).map((index) {
                     return ConnectionWidget(
                       tabIndex: index,
                       contacts: _contacts,
+                      toggleContactIsConnectedStatus:
+                          _toggleContactIsConnectedStatus,
                     );
                   }).toList(),
                 )

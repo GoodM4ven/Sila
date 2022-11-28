@@ -27,8 +27,13 @@ const ContactSchema = CollectionSchema(
       name: r'name',
       type: IsarType.string,
     ),
-    r'originalId': PropertySchema(
+    r'order': PropertySchema(
       id: 2,
+      name: r'order',
+      type: IsarType.long,
+    ),
+    r'originalId': PropertySchema(
+      id: 3,
       name: r'originalId',
       type: IsarType.string,
     )
@@ -38,7 +43,21 @@ const ContactSchema = CollectionSchema(
   deserialize: _contactDeserialize,
   deserializeProp: _contactDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'order': IndexSchema(
+      id: 5897270977454184057,
+      name: r'order',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'order',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _contactGetId,
@@ -66,7 +85,8 @@ void _contactSerialize(
 ) {
   writer.writeBool(offsets[0], object.isConnected);
   writer.writeString(offsets[1], object.name);
-  writer.writeString(offsets[2], object.originalId);
+  writer.writeLong(offsets[2], object.order);
+  writer.writeString(offsets[3], object.originalId);
 }
 
 Contact _contactDeserialize(
@@ -79,7 +99,8 @@ Contact _contactDeserialize(
   object.id = id;
   object.isConnected = reader.readBool(offsets[0]);
   object.name = reader.readString(offsets[1]);
-  object.originalId = reader.readString(offsets[2]);
+  object.order = reader.readLong(offsets[2]);
+  object.originalId = reader.readString(offsets[3]);
   return object;
 }
 
@@ -95,6 +116,8 @@ P _contactDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
+      return (reader.readLong(offset)) as P;
+    case 3:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -117,6 +140,14 @@ extension ContactQueryWhereSort on QueryBuilder<Contact, Contact, QWhere> {
   QueryBuilder<Contact, Contact, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterWhere> anyOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'order'),
+      );
     });
   }
 }
@@ -182,6 +213,94 @@ extension ContactQueryWhere on QueryBuilder<Contact, Contact, QWhereClause> {
         lower: lowerId,
         includeLower: includeLower,
         upper: upperId,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterWhereClause> orderEqualTo(int order) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'order',
+        value: [order],
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterWhereClause> orderNotEqualTo(int order) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'order',
+              lower: [],
+              upper: [order],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'order',
+              lower: [order],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'order',
+              lower: [order],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'order',
+              lower: [],
+              upper: [order],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterWhereClause> orderGreaterThan(
+    int order, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'order',
+        lower: [order],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterWhereClause> orderLessThan(
+    int order, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'order',
+        lower: [],
+        upper: [order],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterWhereClause> orderBetween(
+    int lowerOrder,
+    int upperOrder, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'order',
+        lower: [lowerOrder],
+        includeLower: includeLower,
+        upper: [upperOrder],
         includeUpper: includeUpper,
       ));
     });
@@ -382,6 +501,59 @@ extension ContactQueryFilter
     });
   }
 
+  QueryBuilder<Contact, Contact, QAfterFilterCondition> orderEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterFilterCondition> orderGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterFilterCondition> orderLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'order',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterFilterCondition> orderBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'order',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Contact, Contact, QAfterFilterCondition> originalIdEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -544,6 +716,18 @@ extension ContactQuerySortBy on QueryBuilder<Contact, Contact, QSortBy> {
     });
   }
 
+  QueryBuilder<Contact, Contact, QAfterSortBy> sortByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterSortBy> sortByOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.desc);
+    });
+  }
+
   QueryBuilder<Contact, Contact, QAfterSortBy> sortByOriginalId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'originalId', Sort.asc);
@@ -595,6 +779,18 @@ extension ContactQuerySortThenBy
     });
   }
 
+  QueryBuilder<Contact, Contact, QAfterSortBy> thenByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Contact, Contact, QAfterSortBy> thenByOrderDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'order', Sort.desc);
+    });
+  }
+
   QueryBuilder<Contact, Contact, QAfterSortBy> thenByOriginalId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'originalId', Sort.asc);
@@ -623,6 +819,12 @@ extension ContactQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Contact, Contact, QDistinct> distinctByOrder() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'order');
+    });
+  }
+
   QueryBuilder<Contact, Contact, QDistinct> distinctByOriginalId(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -648,6 +850,12 @@ extension ContactQueryProperty
   QueryBuilder<Contact, String, QQueryOperations> nameProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'name');
+    });
+  }
+
+  QueryBuilder<Contact, int, QQueryOperations> orderProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'order');
     });
   }
 
